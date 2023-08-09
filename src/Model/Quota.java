@@ -12,10 +12,7 @@ public class Quota {
 	private LocalDate dayOfPayment;
 	private LocalDate maxDueDate;
 	public Quota(){
-		this.quotaId=quotaId;
-		this.quotaAmount=quotaAmount;  
-		this.startDate=startDate;
-		this.dueDate=dueDate;
+		
 	}
 
 	public void setQuotaId(int quotaId){
