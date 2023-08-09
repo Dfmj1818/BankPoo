@@ -1,11 +1,11 @@
 package Model;
 
-import java.math.BigDecimal;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class Loan {
-	 private Quota quota;
+
 	 private User user;
 	 private int loanId;
 	 private long loanAmount;
@@ -15,25 +15,20 @@ public class Loan {
      private boolean stateOfLoan;
      private int numberOfQuotas;
      private ArrayList<Quota>loanQuotas;
+     private static int cumulativeId;
       
 	public Loan(){
-		this.loanQuotas=new ArrayList<Quota>();
-		this.user=user;
-		this.loanId=loanId;
-		this.loanAmount=loanAmount;
-		this.loanInterestQuota=loanInterestQuota;
-		this.stateOfLoan=stateOfLoan;
-		
+		cumulativeId++;
 	}
 	
-	public void setQuota(Quota quota){
-		this.quota=quota;
-	}
-	
-	public Quota getQuota() {
-		return quota;
-	}
-	
+    public void setLoanId(){
+    	this.loanId=cumulativeId;
+    }
+    
+    public int getLoanId() {
+		 return loanId;
+	 }
+
 	 public void setUserLoan(User user){
 		 this.user=user;
 	 }
@@ -41,14 +36,7 @@ public class Loan {
 	 public User getUserLoan() {
 		 return user;
 	 }
-	
-	 public void setLoanId() {
-		 this.loanId++;
-	 }
 	 
-	 public int getLoanId() {
-		 return loanId;
-	 }
 	 
 	 public void setLoanAmount(long loanAmount) {
 		 this.loanAmount=loanAmount;
@@ -105,7 +93,6 @@ public class Loan {
 	 public ArrayList<Quota>getQuotasList(){
        	 return loanQuotas;
 	 }
-	 
 	 
 	 
 	 
