@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import Exceptions.BreachOfAgeException;
 import Exceptions.EmptyUserListException;
 import Exceptions.InvalidLoanRequestException;
+import Exceptions.LoanInProgressException;
 import Exceptions.LowScoreException;
 import Exceptions.OverPaidDateException;
 import Exceptions.UserNotFoundException;
@@ -40,6 +41,7 @@ public class Bank {
 	}
 
 
+	
 	public void addUserToDataBase(User user) {
 		usersDataBase.add(user);
 	}
@@ -124,7 +126,7 @@ public class Bank {
 		int creditHistoryScore=0;
 
 		for(Loan loan:loansListHistory){
-			if(loan.getUserLoan()==user){
+			if(loan.getUserLoan().equals(user)){
 				Loan userLoan=loansListHistory.get(creditHistoryScore);
 				if(userLoan.getStateOfLoan()){
 					creditHistoryScore+=50;
@@ -139,7 +141,6 @@ public class Bank {
 
 	}
 
-	//Pendiente mejorar
 	public ArrayList<Number>calculateMaxAmountToLoan(int totalScore,long userMonltyIncome){
 		ArrayList<Number>loanInformation=new ArrayList<Number>();
 		long maxAmountToLoan=0;
@@ -196,8 +197,9 @@ public class Bank {
 		long maxAmountToLoan=(long) loanInformation.get(2).longValue();	
 		long maxNumberOfQuotas=(long) loanInformation.get(1).longValue();
 		double interestQuota=(double) loanInformation.get(0).doubleValue();
-		if(digitedAmount<=maxAmountToLoan&&digitedNumberOfQuotas<=maxNumberOfQuotas){
+		if(digitedAmount<=maxAmountToLoan&&digitedAmount>=1000000&&digitedNumberOfQuotas<=maxNumberOfQuotas){
 			Loan currentLoan=new Loan();
+			currentLoan.setLoanId();
 			currentLoan.setLoanAmount(digitedAmount);
 			currentLoan.setInterestQuota(interestQuota);
 			currentLoan.setStartDate(LocalDate.now());
@@ -229,17 +231,24 @@ public class Bank {
 	}
 
 
-
-	//Pendiente Mejorar
 	public Loan getUserLoanPending(User user){
-		for(int i=0;i<loansListHistory.size();i++){
-			if(loansListHistory.get(i).getUserLoan()==user&&!loansListHistory.get(i).getQuota().getStateOfQuota()){  
-				return loansListHistory.get(i);	      
+		for(int i=0;i<user.getLoansList().size();i++){
+			if(!user.getLoansList().get(i).getQuotasList().get(i).getStateOfQuota()){  
+				return user.getLoansList().get(i);	      
 			}
 		}		
 		return null;
 	}
-	//pendiente mejorar
+	
+	public void verifyUserLoanPending(User user) {
+		for(int i=0;i<user.getLoansList().size();i++){
+			if(!user.getLoansList().get(i).getStateOfLoan()){
+				throw new LoanInProgressException();
+			}
+		}
+		
+	}
+	
 	public ArrayList<Quota>getUserPendingQuotas(Loan loan){
 		ArrayList<Quota>pendingQuotas=new ArrayList<Quota>();		
 		for(int i=0;i<loan.getQuotasList().size();i++){
@@ -279,6 +288,7 @@ public class Bank {
 				pendingQuota.setDayOfPayment(currentDate);
 				digitedAmount-=pendingQuota.getQuotaAmount();
 				view.showMessage("Cuota Pagada Correctamente");
+				break;
 			}
 			else {
 				view.showMessage("No tienes Fondos Suficientes para pagar esta cuota");
@@ -288,6 +298,8 @@ public class Bank {
 		}
 
 	}
+	
+
 
 
 	public void verifyEmail(String mail) {
@@ -305,8 +317,7 @@ public class Bank {
 			throw new EmptyUserListException();
 		}
 	}
-
-
+	
 	public String showUserLoans(Loan pendingLoan){
 		StringBuilder userPendingLoansInformation=new StringBuilder();
 
@@ -315,6 +326,7 @@ public class Bank {
 		userPendingLoansInformation.append("Cantidad Solicitada: ").append(pendingLoan.getLoanAmount()).append("\n");
 		userPendingLoansInformation.append("Fecha De Inicio Del Prestamo: ").append(pendingLoan.getStartDate()).append("\n");
 		userPendingLoansInformation.append("Fecha De Terminacion Del Prestamo: ").append(pendingLoan.getDueDate());
+		userPendingLoansInformation.append("Numero De Cuotas Del Prestamo: ").append(pendingLoan.getQuotasList().size()).append("\n");
 		return userPendingLoansInformation.toString();	
 	}
 
