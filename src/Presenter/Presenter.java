@@ -132,13 +132,15 @@ public class Presenter {
 		int numberOfChildren = 0;
 		int contractType= 0;
 		long montlyExpenses=0;
-		int paidQuotaOrNotPaidQuota=0;
 		long digitedLoanAmount=0;
 		int digitedNumberOfQuotas=0;
+		long digitedQuotasAmount=0;
 		int userScore=0;
+		String yesOrNotAnswer="";
 		LocalDate currentDate=LocalDate.now();
 		boolean exit=false;
-		 while(!exit) {
+		int digitedQuotasToPay=0;
+		while(!exit) {
 			view.showMessage("Hemos Identificado Tu identidad,Bienvenido "+user.getName());
 			view.showMessage("¿Que Deseas Hacer Hoy?"+"\n1.Solicitar Un Prestamo"+"\n2.Pagar Cuota De Un Credito\n3.Volver al Menu Principal");
 			digitedOption=view.readInt();
@@ -149,6 +151,7 @@ public class Presenter {
 				}
 				catch(LoanInProgressException e){
 					view.showMessage(e.getMessage());
+
 				}
 				view.showMessage("Digita el tipo de Contrato Actual que tienes");
 				view.showMessage("1.Formal(Termino Indefinido)\n2.Formal-(Termino Fijo)\n3.Informal\n4.Desempleado");
@@ -168,13 +171,11 @@ public class Presenter {
 				int creditHistoryScore=bank.verifyCreditHistory(user);
 				int totalScore=userScore+creditHistoryScore;
 				ArrayList<Number>loanInformation=bank.calculateMaxAmountToLoan(totalScore,userMontlyIncome);
-				view.showMessage("Puede Solicitar Un Prestamo Hasta Por una Cantidad de "+loanInformation.get(2)+"\nA Un Maximo De "+loanInformation.get(1)+" Cuotas."+"\nCon Un Interes Del "+loanInformation.get(0)+"%");
+				view.showMessage("Puede Solicitar Un Prestamo Hasta Por una Cantidad de "+loanInformation.get(2)+"\nA 36 Cuotas Mensuales "+loanInformation.get(1)+" Cuotas."+"\nCon Un Interes Del "+loanInformation.get(0)+"\nPara Solicitar el Prestamo Debes Solicitar Al Menos:"+loanInformation.get(3)+" Cop.");
 				view.showMessage("Digita La Cantidad Que Deseas Solicitar.");
 				digitedLoanAmount=view.readLong();
-				view.showMessage("Digita El Numero De cuotas A las Que desees Dividir el Prestamo");
-				digitedNumberOfQuotas=view.readInt();
 				try {
-					Loan userLoan=bank.createUserLoan(user,loanInformation, digitedLoanAmount,digitedNumberOfQuotas);
+					Loan userLoan=bank.createUserLoan(user,loanInformation, digitedLoanAmount);
 					ArrayList<Quota>quotasList=bank.generateLoanQuotas(userLoan, digitedNumberOfQuotas);
 					userLoan.setQuotasList(quotasList);
 					view.showMessage("Prestamo Adquirido Exitosamente");
@@ -192,7 +193,7 @@ public class Presenter {
 				view.showMessage("Bienvenido "+user.getName()+"\nA Continuacion Le mostraremos sus Prestamos Pendientes");
 				try {
 					bank.verifyUserLoansListIsEmpty(user);
-				}
+				} 
 				catch(EmptyUserListException e) {
 					view.showMessage(e.getMessage()+"\nVolviendo al menu principal...");
 					this.loginUser();
@@ -202,12 +203,12 @@ public class Presenter {
 				view.showMessage(pendingLoanInformation);
 				view.showMessage("Selecciona para ver\n1.Cuotas Pagadas\n2.Cuotas Por Pagar\n3.Volver al Menu Principal");
 				paidOrUnpaidQuotas=view.readInt();
-				switch(paidQuotaOrNotPaidQuota){
+				switch(paidOrUnpaidQuotas){
 				case 1:
 					try {
 						ArrayList<Quota>userPaidQuotas=bank.getUserPaidQuotas(userPendingLoan);
 						bank.verifyUserLoansListIsEmpty(user);
-						bank.showQuotasInformation(userPaidQuotas);
+						bank.showQuotasInformation(userPaidQuotas);					
 					}
 					catch(EmptyUserListException e){
 						view.showMessage(e.getMessage());
@@ -216,22 +217,38 @@ public class Presenter {
 					break;
 				case 2:
 					try {
-						ArrayList<Quota>userPendingQuotas=bank.getUserPendingQuotas(userPendingLoan);
-						bank.showQuotasInformation(userPendingQuotas);
 						bank.verifyUserLoansListIsEmpty(user);
+						ArrayList<Quota>userPendingQuotas=bank.getUserPendingQuotas(userPendingLoan);
+						String pendingQuotasInformation=bank.showQuotasInformation(userPendingQuotas);
+						view.showMessage(pendingQuotasInformation);
 						bank.checkPaymentDate(user,userPendingQuotas,currentDate);	
-					}
-					catch(OverPaidDateException e){
+						view.showMessage("¿Deseas Pagar Alguna Cuota?");
+						yesOrNotAnswer=view.readString();
+						if(yesOrNotAnswer.equalsIgnoreCase("yes")){
+							view.showMessage("Digita La cantidad de Cuotas Que deseas Pagar");
+							digitedQuotasToPay=view.readInt();
+							view.showMessage("Digita El monto De las Cuotas Que deseas Pagar");
+							digitedQuotasAmount=view.readLong();
+							int paidQuotas=bank.paidQuota(userPendingQuotas,digitedQuotasAmount, digitedQuotasToPay, currentDate);
+							view.showMessage("Haz Pagado Un Total "+paidQuotas+" Cuotas");
+							bank.showQuotasInformation(userPendingQuotas);
+						}
+						
+						else {
+							exit=true;
+						}
+						
+					}catch(OverPaidDateException e){
 						view.showMessage(e.getMessage());
-					}
-					catch(EmptyUserListException e){
-						view.showMessage(e.getMessage());
-					}
 
+					}catch(EmptyUserListException e){
+						view.showMessage(e.getMessage());
+					}
 
 					break;
 
 				case 3:
+					view.showMessage("Saliendo al Menu Principal");
 					exit=true;
 					this.loginUser();
 					break;
@@ -256,6 +273,9 @@ public class Presenter {
 		}	
 	}
 
+	public void runPaidQuotaServices(int digited) {
+
+	}
 
 
 	public static void main(String[]args) {
