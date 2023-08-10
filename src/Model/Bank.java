@@ -41,7 +41,7 @@ public class Bank {
 	}
 
 
-	
+
 	public void addUserToDataBase(User user) {
 		usersDataBase.add(user);
 	}
@@ -146,65 +146,77 @@ public class Bank {
 		long maxAmountToLoan=0;
 		double interestQuota=0;
 		int maxNumberOfQuotas=0;
+		long minimumAmountToLoan=0;
 		final long userAvaiableMoney=(long) (userMonltyIncome*0.3);
+
 		if(totalScore>=275){
 			interestQuota=0.3;
 			maxNumberOfQuotas=72;
 			maxAmountToLoan=userAvaiableMoney*maxNumberOfQuotas;
+			minimumAmountToLoan=(long) (maxAmountToLoan*0.10);
 		}
 		else if(totalScore>=250){
 			interestQuota=0.4;
 			maxNumberOfQuotas=36;
 			maxAmountToLoan=userAvaiableMoney*maxNumberOfQuotas; 
+			minimumAmountToLoan=(long) (maxAmountToLoan*0.10);
 		}
 		else if(totalScore>=225){
 			interestQuota=0.45;
 			maxNumberOfQuotas=36;
 			maxAmountToLoan= userAvaiableMoney*maxNumberOfQuotas;
+			minimumAmountToLoan=(long) (maxAmountToLoan*0.10);
 		}
 		else if(totalScore>=175){
 			interestQuota=0.5;
 			maxNumberOfQuotas=36;
 			maxAmountToLoan= userAvaiableMoney*maxNumberOfQuotas;
+			minimumAmountToLoan=(long) (maxAmountToLoan*0.10);
 		}
 		else if(totalScore>=125){
 			interestQuota=0.55;
 			maxNumberOfQuotas=36;
 			maxAmountToLoan= userAvaiableMoney*maxNumberOfQuotas;
+			minimumAmountToLoan= (long) (maxAmountToLoan*0.10);
 		}
 		else if(totalScore>=100){
 			interestQuota=0.6;
 			maxNumberOfQuotas=24;
 			maxAmountToLoan=userAvaiableMoney*maxNumberOfQuotas;
+			minimumAmountToLoan=(long) (maxAmountToLoan*0.10);
 		}
 		else if(totalScore>=75){
 			interestQuota=0.6;
 			maxNumberOfQuotas=12;
 			maxAmountToLoan=userAvaiableMoney*maxNumberOfQuotas;
+			minimumAmountToLoan=(long) (maxAmountToLoan*0.10);
 		}
 		else {
 			throw new LowScoreException();
 		}
 		loanInformation.add(interestQuota);
 		loanInformation.add(maxNumberOfQuotas);
-		loanInformation.add(maxAmountToLoan);	
+		loanInformation.add(maxAmountToLoan);
+		loanInformation.add(minimumAmountToLoan);
+
 		return loanInformation;
 	}
 
 
 	//pendiente mejorar
-	public Loan createUserLoan(User user,ArrayList<Number>loanInformation,long digitedAmount,int digitedNumberOfQuotas){
+	public Loan createUserLoan(User user,ArrayList<Number>loanInformation,long digitedAmount){
 		long maxAmountToLoan=(long) loanInformation.get(2).longValue();	
-		long maxNumberOfQuotas=(long) loanInformation.get(1).longValue();
+		int maxNumberOfQuotas=(int) loanInformation.get(1).intValue();
 		double interestQuota=(double) loanInformation.get(0).doubleValue();
-		if(digitedAmount<=maxAmountToLoan&&digitedAmount>=1000000&&digitedNumberOfQuotas<=maxNumberOfQuotas){
+		long minimumAmountToLoan=(long)loanInformation.get(3).longValue();
+		if(digitedAmount<=maxAmountToLoan&&digitedAmount>=minimumAmountToLoan){
 			Loan currentLoan=new Loan();
 			currentLoan.setLoanId();
 			currentLoan.setLoanAmount(digitedAmount);
 			currentLoan.setInterestQuota(interestQuota);
 			currentLoan.setStartDate(LocalDate.now());
-			currentLoan.setDueDate(LocalDate.now().plusMonths(digitedNumberOfQuotas));
-			currentLoan.setNumberOfQuotas(digitedNumberOfQuotas);
+			currentLoan.setDueDate(LocalDate.now().plusMonths(maxNumberOfQuotas));
+			currentLoan.setNumberOfQuotas(maxNumberOfQuotas);
 			currentLoan.setStateOfLoan(false);
 			currentLoan.setUserLoan(user);
 			return currentLoan;
@@ -239,16 +251,16 @@ public class Bank {
 		}		
 		return null;
 	}
-	
+
 	public void verifyUserLoanPending(User user) {
 		for(int i=0;i<user.getLoansList().size();i++){
 			if(!user.getLoansList().get(i).getStateOfLoan()){
 				throw new LoanInProgressException();
 			}
 		}
-		
+
 	}
-	
+
 	public ArrayList<Quota>getUserPendingQuotas(Loan loan){
 		ArrayList<Quota>pendingQuotas=new ArrayList<Quota>();		
 		for(int i=0;i<loan.getQuotasList().size();i++){
@@ -281,14 +293,17 @@ public class Bank {
 		}
 	}
 
-	public void paidQuota(ArrayList<Quota>pendingQuotas,long digitedAmount,LocalDate currentDate){
+	public int paidQuota(ArrayList<Quota>pendingQuotas,long digitedAmount,int digitedQuotasToPay,LocalDate currentDate){
+		int paidQuotas=0;
 		for(Quota pendingQuota :pendingQuotas){
+			if(paidQuotas>=digitedQuotasToPay){
+				break;
+			}
 			if(digitedAmount>=pendingQuota.getQuotaAmount()){
+				paidQuotas++;
 				pendingQuota.setStateOfQuota(true);
 				pendingQuota.setDayOfPayment(currentDate);
-				digitedAmount-=pendingQuota.getQuotaAmount();
-				view.showMessage("Cuota Pagada Correctamente");
-				break;
+				digitedAmount-=pendingQuota.getQuotaAmount();	
 			}
 			else {
 				view.showMessage("No tienes Fondos Suficientes para pagar esta cuota");
@@ -296,10 +311,8 @@ public class Bank {
 			}
 
 		}
-
+		return paidQuotas;
 	}
-	
-
 
 
 	public void verifyEmail(String mail) {
@@ -317,15 +330,15 @@ public class Bank {
 			throw new EmptyUserListException();
 		}
 	}
-	
+
 	public String showUserLoans(Loan pendingLoan){
 		StringBuilder userPendingLoansInformation=new StringBuilder();
 
 		userPendingLoansInformation.append("ID :").append(pendingLoan.getLoanId()).append("\n");
 		userPendingLoansInformation.append("Nombre Del Prestamista: ").append(pendingLoan.getUserLoan().getName()).append(" ").append(pendingLoan.getUserLoan().getLastName()).append("\n");
-		userPendingLoansInformation.append("Cantidad Solicitada: ").append(pendingLoan.getLoanAmount()).append("\n");
+		userPendingLoansInformation.append("Cantidad Solicitada: ").append(pendingLoan.getLoanAmount()).append("Cop").append("\n");
 		userPendingLoansInformation.append("Fecha De Inicio Del Prestamo: ").append(pendingLoan.getStartDate()).append("\n");
-		userPendingLoansInformation.append("Fecha De Terminacion Del Prestamo: ").append(pendingLoan.getDueDate());
+		userPendingLoansInformation.append("Fecha De Terminacion Del Prestamo: ").append(pendingLoan.getDueDate()).append("\n");
 		userPendingLoansInformation.append("Numero De Cuotas Del Prestamo: ").append(pendingLoan.getQuotasList().size()).append("\n");
 		return userPendingLoansInformation.toString();	
 	}
@@ -337,20 +350,18 @@ public class Bank {
 		for(int i=0;i<quotasList.size();i++){
 			Quota currentQuota=quotasList.get(i);
 			quotaInfromation.append("Id: ").append(currentQuota.getQuotaID()).append("\n");;
-			quotaInfromation.append("Valor de la Cuota").append(currentQuota.getQuotaAmount()).append("\n");		
-			quotaInfromation.append("Fecha de Inicio De la Cuota").append(currentQuota.getStartDate()).append("\n");
-			quotaInfromation.append("Fecha De Vencimiento De la Cuota").append(currentQuota.getDueDate());		
+			quotaInfromation.append("Valor de la Cuota: ").append(currentQuota.getQuotaAmount()).append("Cop").append("\n");		
+			quotaInfromation.append("Fecha de Inicio De la Cuota: ").append(currentQuota.getStartDate()).append("\n");
+			quotaInfromation.append("Fecha De Vencimiento De la Cuota: ").append(currentQuota.getDueDate()).append("\n");	
+			quotaInfromation.append("-----------------------------------------------------------------------------------").append("\n");
 			if(currentQuota.getStateOfQuota()){
-				quotaInfromation.append("Estado de la cuota: Pagado el dia "+currentQuota.getDayOfPayment());
+				quotaInfromation.append("Estado de la cuota: Pagado el dia "+currentQuota.getDayOfPayment()).append("\n");
 			}
 			else if(!currentQuota.getStateOfQuota()){
-				quotaInfromation.append("Estado de la cuota: Sin Pagar");
+				quotaInfromation.append("Estado de la cuota: Sin Pagar").append("\n");
 			}
 		}
 		return quotaInfromation.toString();
 	}
 
 }
-
-
-
