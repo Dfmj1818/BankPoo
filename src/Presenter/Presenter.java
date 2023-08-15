@@ -211,6 +211,7 @@ public class Presenter {
 						try {
 							bank.verifyUserLoansListIsEmpty(user);
 							ArrayList<Quota>userPaidQuotas=bank.getUserPaidQuotas(userPendingLoan);
+							view.showMessage("Estas Son Tus Cuotas pagadas Actualmente\n");
 							String quotasInformation=bank.showQuotasInformation(userPaidQuotas);	
 							view.showMessage(quotasInformation);
 						}catch(EmptyUserListException e){
