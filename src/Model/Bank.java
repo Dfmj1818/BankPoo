@@ -273,13 +273,10 @@ public class Bank {
 
 	public ArrayList<Quota>getUserPaidQuotas(Loan loan){
 		ArrayList<Quota>paidQuotas=new ArrayList<Quota>();
-		for(int i=0;i<paidQuotas.size();i++){
+		for(int i=0;i<loan.getQuotasList().size();i++){
 			if(loan.getQuotasList().get(i).getStateOfQuota()){
 				paidQuotas.add(loan.getQuotasList().get(i));
 			}      
-		}
-		if(paidQuotas.isEmpty()){
-			throw new EmptyUserListException();
 		}
 		return paidQuotas;
 	}
@@ -310,6 +307,7 @@ public class Bank {
 					pendingQuota.setStateOfQuota(true);
 					pendingQuota.setDayOfPayment(currentDate);
 					digitedAmount-=pendingQuota.getQuotaAmount();	
+			        
 				}
 				else {
 					view.showMessage("No tienes Fondos Suficientes para pagar esta cuota");
